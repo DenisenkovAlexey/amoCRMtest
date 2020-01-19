@@ -1,15 +1,9 @@
 <?php
 include __DIR__ . '/model/amoCrmAdapter.php';
 
-$adapter = new amoCrmAdapter('subdomain');
-//$auth = $adapter->autorizationFromGuzzleHttp('username', 'hash');
-try {
-    $auth = $adapter->autorization('username', 'hash');
-
-    $contact = $adapter->Query('contact', '89101102737');
-    printf($contact);
-} catch (\AmoCRM\Exception $e) {
-    printf($e->getMessage());
-}
-
-print_r($contact);
+$adapter = new amoCrmAdapter('denisenkovalexey');
+$auth = $adapter->autorization('denisenkov.alexey@gmail.com', '813db85697ad922997f26ce27900b44912c01629');
+$contact = $adapter->Query('contact','Василий Петрович');
+$lead = $adapter->Query('lead','test');
+$company = $adapter->Query('company','тест');
+$note = $adapter->Query('note','test','lead');
