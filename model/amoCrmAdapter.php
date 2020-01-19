@@ -58,8 +58,12 @@ class amoCrmAdapter
      */
     public function contactQuery($query)
     {
-        $r = $this->httpClient->request('GET', 'api/v2/contacts/?query='.$query);
-        return json_decode($r->getBody()->getContents());
+        try {
+            $r = $this->httpClient->request('GET', 'api/v2/contacts/?query='.$query);
+            return json_decode($r->getBody()->getContents());
+        } catch (Exception $e) {
+            return $e->getCode();
+        }
     }
 
     /**
@@ -68,8 +72,12 @@ class amoCrmAdapter
      */
     public function leadQuery($query)
     {
+        try {
         $r = $this->httpClient->request('GET', 'api/v2/leads?query='.$query);
         return json_decode($r->getBody()->getContents());
+        } catch (Exception $e) {
+            return $e->getCode();
+        }
     }
 
     /**
@@ -78,8 +86,12 @@ class amoCrmAdapter
      */
     public function companyQuery($query)
     {
-        $r = $this->httpClient->request('GET', 'api/v2/companies?query='.$query);
-        return json_decode($r->getBody()->getContents());
+        try {
+            $r = $this->httpClient->request('GET', 'api/v2/companies?query=' . $query);
+            return json_decode($r->getBody()->getContents());
+        } catch (Exception $e) {
+            return $e->getCode();
+        }
     }
 
     /**
@@ -89,8 +101,12 @@ class amoCrmAdapter
      */
     public function noteQuery($query, $type)
     {
-        $r = $this->httpClient->request('GET', 'api/v2/notes?type='.$type.'&query='.$query);
-        return json_decode($r->getBody()->getContents());
+        try {
+            $r = $this->httpClient->request('GET', 'api/v2/notes?type=' . $type . '&query=' . $query);
+            return json_decode($r->getBody()->getContents());
+        } catch (Exception $e) {
+            return $e->getCode();
+        }
 
 
     }
