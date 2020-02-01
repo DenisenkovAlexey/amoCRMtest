@@ -15,7 +15,7 @@ class amoCrmAdapter
     private $subdomain;
     private  $cookieJar;
     private  $httpClient;
-    private  $Log;
+    private  $log;
 
     private  $login;
     private  $hash;
@@ -36,11 +36,11 @@ class amoCrmAdapter
             'cookies' => $this->cookieJar,
         ]);
 
-        $this->Log = new Logger('test');
+        $this->log = new Logger('test');
         $hendler = new StreamHandler(__DIR__.'/../Log/logFile.txt',Logger::ERROR);
         $formatter = new LineFormatter("[%datetime%]: %level_name%: %message%\n", "Y-m-d H:i:s");
         $hendler->setFormatter($formatter);
-        $this->Log->pushHandler($hendler);
+        $this->log->pushHandler($hendler);
     }
 
     /**
@@ -64,7 +64,7 @@ class amoCrmAdapter
                 $error = $e->getMessage();
                 $user = $this->login;
                 $subdomain = $this->subdomain;
-                $this->Log->error("Ошибка авторизации. Код ответа: $error, пользователь: $user, субдомен: $subdomain");
+                $this->log->error("Ошибка авторизации. Код ответа: $error, пользователь: $user, субдомен: $subdomain");
                 return false;
             }
         } else {
@@ -84,7 +84,7 @@ class amoCrmAdapter
                 $error = $e->getMessage();
                 $user = $this->login;
                 $subdomain = $this->subdomain;
-                $this->Log->error("Запрос: $queryText, ответ: $error, пользователь: $user, субдомен: $subdomain");
+                $this->log->error("Запрос: $queryText, ответ: $error, пользователь: $user, субдомен: $subdomain");
                 return false;
             }
             break;
@@ -93,7 +93,7 @@ class amoCrmAdapter
             $error = $e->getMessage();
             $user = $this->login;
             $subdomain = $this->subdomain;
-            $this->Log->error("Запрос: $queryText, ответ: $error, пользователь: $user, субдомен: $subdomain");
+            $this->log->error("Запрос: $queryText, ответ: $error, пользователь: $user, субдомен: $subdomain");
             return false;
             break;
     }
