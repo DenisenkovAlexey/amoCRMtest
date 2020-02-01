@@ -1,0 +1,9 @@
+
+.idea/misc.xml
+log/logFile.txt
+model/.idea/misc.xml
+model/.idea/workspace.xml
+*.xml
+*.txt
+*.iml
+vendor
