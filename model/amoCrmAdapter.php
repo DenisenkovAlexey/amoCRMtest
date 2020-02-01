@@ -4,20 +4,30 @@ include './vendor/autoload.php';
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\FileCookieJar;
 
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Formatter\LineFormatter;
+
 
 class amoCrmAdapter
 {
 
     private $subdomain;
-    private $cookieJar;
-    private $httpClient;
+    private  $cookieJar;
+    private  $httpClient;
+    private  $Log;
+
+    private  $login;
+    private  $hash;
     /**
      * amoCrmAdapter constructor.
      * @param string $subdomain
      */
-    public function __construct(string $subdomain)
+    public function __construct(string $subdomain, string $login, string $hash)
     {
         $this->subdomain = $subdomain;
+        $this->login = $login;
+        $this->hash = $hash;
         $cookieFile = __DIR__ . '/../cookies/'.$this->subdomain.'.txt';
         $this->cookieJar = new FileCookieJar($cookieFile, true);
 
@@ -25,6 +35,12 @@ class amoCrmAdapter
             'base_uri' => 'https://' . $this->subdomain . '.amocrm.ru/',
             'cookies' => $this->cookieJar,
         ]);
+
+        $this->Log = new Logger('test');
+        $hendler = new StreamHandler(__DIR__.'/../Log/logFile.txt',Logger::ERROR);
+        $formatter = new LineFormatter("[%datetime%]: %level_name%: %message%\n", "Y-m-d H:i:s");
+        $hendler->setFormatter($formatter);
+        $this->Log->pushHandler($hendler);
     }
 
     /**
@@ -33,24 +49,56 @@ class amoCrmAdapter
      * @return int
      * Авторизация через GuzzleHTTP с сохранением куков
      */
-    public function autorization(string $login, string $hash) : int
+    public function autorization() : int
     {
         if (isset($this->httpClient)) {
             try {
                 $r = $this->httpClient->request('POST', 'private/api/auth.php', [
                     'json' => [
-                        'USER_LOGIN' => $login,
-                        'USER_HASH' => $hash,
+                        'USER_LOGIN' => $this->login,
+                        'USER_HASH' => $this->hash,
                     ]
                 ]);
                 return $r->getStatusCode();
             } catch (Exception $e) {
-                return $e->getCode();
+                $error = $e->getMessage();
+                $user = $this->login;
+                $subdomain = $this->subdomain;
+                $this->Log->error("Ошибка авторизации. Код ответа: $error, пользователь: $user, субдомен: $subdomain");
+                return false;
             }
         } else {
-            return null;
+            return false;
         }
     }
+
+    private function errorHandling(Exception $e,string $query)
+    {            switch ($e->getCode()) {
+        case 401:
+            $this->autorization();
+            try {
+                $r = $this->httpClient->request('GET', $query);
+                return json_decode($r->getBody()->getContents());
+            } catch (Exception $e) {
+                $queryText = "$query";
+                $error = $e->getMessage();
+                $user = $this->login;
+                $subdomain = $this->subdomain;
+                $this->Log->error("Запрос: $queryText, ответ: $error, пользователь: $user, субдомен: $subdomain");
+                return false;
+            }
+            break;
+        default:
+            $queryText = $query;
+            $error = $e->getMessage();
+            $user = $this->login;
+            $subdomain = $this->subdomain;
+            $this->Log->error("Запрос: $queryText, ответ: $error, пользователь: $user, субдомен: $subdomain");
+            return false;
+            break;
+    }
+    }
+
 
     /**
      * @param $query - запрос
@@ -59,10 +107,11 @@ class amoCrmAdapter
     public function contactQuery($query)
     {
         try {
-            $r = $this->httpClient->request('GET', 'api/v2/contacts/?query='.$query);
+            $r = $this->httpClient->request('GET', 'api/v2/contacts/?query=' . $query);
             return json_decode($r->getBody()->getContents());
         } catch (Exception $e) {
-            return $e->getCode();
+            $this->errorHandling($e,'api/v2/contacts/?query=' . $query);
+            return false;
         }
     }
 
@@ -73,10 +122,11 @@ class amoCrmAdapter
     public function leadQuery($query)
     {
         try {
-        $r = $this->httpClient->request('GET', 'api/v2/leads?query='.$query);
+        $r = $this->httpClient->request('GET', 'api/v2/leads?query=' . $query);
         return json_decode($r->getBody()->getContents());
         } catch (Exception $e) {
-            return $e->getCode();
+            $this->errorHandling($e,'api/v2/leads?query=' . $query);
+            return false;
         }
     }
 
@@ -90,7 +140,8 @@ class amoCrmAdapter
             $r = $this->httpClient->request('GET', 'api/v2/companies?query=' . $query);
             return json_decode($r->getBody()->getContents());
         } catch (Exception $e) {
-            return $e->getCode();
+            $this->errorHandling($e,'api/v2/companies?query=' . $query);
+            return false;
         }
     }
 
@@ -105,7 +156,8 @@ class amoCrmAdapter
             $r = $this->httpClient->request('GET', 'api/v2/notes?type=' . $type . '&query=' . $query);
             return json_decode($r->getBody()->getContents());
         } catch (Exception $e) {
-            return $e->getCode();
+            $this->errorHandling($e,'api/v2/notes?type=' . $type . '&query=' . $query);
+            return false;
         }
 
 
